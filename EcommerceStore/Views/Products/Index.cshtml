@@ -1,0 +1,140 @@
+@model List<Product>
+
+@{
+    ViewData["Title"] = "Products";
+    var categories = ViewBag.Categories as List<Category>;
+    var currentCategory = ViewBag.CurrentCategory as int?;
+    var currentSort = ViewBag.CurrentSort as string;
+}
+
+<div class="container py-4">
+    <div class="row">
+        <!-- Filters Sidebar -->
+        <div class="col-lg-3">
+            <div class="filters-sidebar">
+                <h5 class="mb-3">Categories</h5>
+                <div class="list-group mb-4">
+                    <a asp-controller="Products" asp-action="Index" 
+                       class="list-group-item list-group-item-action @(currentCategory == null ? "active" : "")">
+                        All Products
+                    </a>
+                    @foreach (var category in categories)
+                    {
+                        <a asp-controller="Products" asp-action="Index" asp-route-categoryId="@category.Id"
+                           class="list-group-item list-group-item-action @(currentCategory == category.Id ? "active" : "")">
+                            <i class="bi @category.IconClass me-2"></i> @category.Name
+                        </a>
+                    }
+                </div>
+
+                <h5 class="mb-3">Sort By</h5>
+                <div class="list-group">
+                    <a asp-controller="Products" asp-action="Index" asp-route-sort="popular" asp-route-categoryId="@currentCategory"
+                       class="list-group-item list-group-item-action @(currentSort == "popular" ? "active" : "")">
+                        Most Popular
+                    </a>
+                    <a asp-controller="Products" asp-action="Index" asp-route-sort="price_asc" asp-route-categoryId="@currentCategory"
+                       class="list-group-item list-group-item-action @(currentSort == "price_asc" ? "active" : "")">
+                        Price: Low to High
+                    </a>
+                    <a asp-controller="Products" asp-action="Index" asp-route-sort="price_desc" asp-route-categoryId="@currentCategory"
+                       class="list-group-item list-group-item-action @(currentSort == "price_desc" ? "active" : "")">
+                        Price: High to Low
+                    </a>
+                    <a asp-controller="Products" asp-action="Index" asp-route-sort="name" asp-route-categoryId="@currentCategory"
+                       class="list-group-item list-group-item-action @(currentSort == "name" ? "active" : "")">
+                        Name: A to Z
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="col-lg-9">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>@(currentCategory.HasValue ? categories.FirstOrDefault(c => c.Id == currentCategory.Value)?.Name : "All Products")</h2>
+                <span class="text-muted">@Model.Count products found</span>
+            </div>
+
+            @if (!Model.Any())
+            {
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> No products found matching your criteria.
+                </div>
+            }
+            else
+            {
+                <div class="row g-4">
+                    @foreach (var product in Model)
+                    {
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card product-card h-100 hover-lift">
+                                @if (product.IsOnSale)
+                                {
+                                    <div class="badge-sale">SALE</div>
+                                }
+                                @if (product.StockQuantity <= 5)
+                                {
+                                    <div class="badge-stock urgency-pulse">Only @product.StockQuantity left!</div>
+                                }
+                                <img src="@product.ImageUrl" class="card-img-top" alt="@product.Name">
+                                <div class="card-body">
+                                    <h5 class="card-title">@product.Name</h5>
+                                    <p class="card-text text-muted small">@product.Description.Substring(0, Math.Min(60, product.Description.Length))...</p>
+                                    
+                                    <div class="d-flex align-items-center mb-2">
+                                        <div class="rating">
+                                            @for (int i = 0; i < 5; i++)
+                                            {
+                                                if (i < Math.Floor(product.Rating))
+                                                {
+                                                    <i class="bi bi-star-fill text-warning"></i>
+                                                }
+                                                else
+                                                {
+                                                    <i class="bi bi-star text-warning"></i>
+                                                }
+                                            }
+                                            <span class="ms-2 text-muted small">(@product.ReviewCount)</span>
+                                        </div>
+                                    </div>
+
+                                    @if (product.IsOnSale && product.SaleEndDate.HasValue)
+                                    {
+                                        <div class="sale-countdown mb-2" data-end-date="@product.SaleEndDate.Value.ToString("o")">
+                                            <small class="text-danger fw-bold">
+                                                <i class="bi bi-clock"></i> Sale ends in: <span class="countdown-display"></span>
+                                            </small>
+                                        </div>
+                                    }
+
+                                    <div class="price-section mb-3">
+                                        <span class="price-current fw-bold text-primary fs-5">$@product.Price</span>
+                                        @if (product.IsOnSale)
+                                        {
+                                            <span class="price-original text-muted text-decoration-line-through ms-2">$@product.OriginalPrice</span>
+                                            <span class="badge bg-danger ms-2">@(Math.Round((product.OriginalPrice - product.Price) / product.OriginalPrice * 100))% OFF</span>
+                                        }
+                                    </div>
+
+                                    <div class="d-grid gap-2">
+                                        <a asp-controller="Products" asp-action="Details" asp-route-id="@product.Id" class="btn btn-outline-primary btn-sm">
+                                            View Details
+                                        </a>
+                                        <button class="btn btn-primary btn-sm add-to-cart-btn" data-product-id="@product.Id">
+                                            <i class="bi bi-cart-plus"></i> Add to Cart
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/product-countdown.js"></script>
+}

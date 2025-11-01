@@ -1,0 +1,146 @@
+@model List<Product>
+
+@{
+    ViewData["Title"] = "Home";
+}
+
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-3">Welcome to Premium Store</h1>
+                <p class="lead mb-4">Discover amazing products with exclusive deals and limited-time offers!</p>
+                <a asp-controller="Products" asp-action="Index" class="btn btn-primary btn-lg">
+                    Shop Now <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+            <div class="col-lg-6">
+                <img src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=600" alt="Shopping" class="img-fluid rounded">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Categories Section -->
+<section class="categories-section py-5">
+    <div class="container">
+        <h2 class="text-center mb-4">Shop by Category</h2>
+        <div class="row g-4">
+            @foreach (var category in ViewBag.Categories as List<Category>)
+            {
+                <div class="col-md-4 col-lg-2">
+                    <a asp-controller="Products" asp-action="Index" asp-route-categoryId="@category.Id" class="category-card text-decoration-none">
+                        <div class="card h-100 text-center hover-lift">
+                            <div class="card-body">
+                                <i class="bi @category.IconClass display-4 text-primary mb-3"></i>
+                                <h5 class="card-title">@category.Name</h5>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+<!-- Featured Products Section -->
+<section class="featured-products py-5 bg-light">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Featured Products</h2>
+            <a asp-controller="Products" asp-action="Index" class="btn btn-outline-primary">View All</a>
+        </div>
+        <div class="row g-4">
+            @foreach (var product in Model)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="card product-card h-100 hover-lift">
+                        @if (product.IsOnSale)
+                        {
+                            <div class="badge-sale">SALE</div>
+                        }
+                        @if (product.StockQuantity <= 5)
+                        {
+                            <div class="badge-stock">Only @product.StockQuantity left!</div>
+                        }
+                        <img src="@product.ImageUrl" class="card-img-top" alt="@product.Name">
+                        <div class="card-body">
+                            <h5 class="card-title">@product.Name</h5>
+                            <p class="card-text text-muted">@product.Description.Substring(0, Math.Min(80, product.Description.Length))...</p>
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="rating">
+                                    @for (int i = 0; i < 5; i++)
+                                    {
+                                        if (i < Math.Floor(product.Rating))
+                                        {
+                                            <i class="bi bi-star-fill text-warning"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-star text-warning"></i>
+                                        }
+                                    }
+                                    <span class="ms-2 text-muted">(@product.ReviewCount)</span>
+                                </div>
+                            </div>
+                            <div class="price-section mb-3">
+                                <span class="price-current fw-bold text-primary fs-4">$@product.Price</span>
+                                @if (product.IsOnSale)
+                                {
+                                    <span class="price-original text-muted text-decoration-line-through ms-2">$@product.OriginalPrice</span>
+                                    <span class="badge bg-danger ms-2">@(Math.Round((product.OriginalPrice - product.Price) / product.OriginalPrice * 100))% OFF</span>
+                                }
+                            </div>
+                            <div class="d-grid gap-2">
+                                <a asp-controller="Products" asp-action="Details" asp-route-id="@product.Id" class="btn btn-outline-primary">
+                                    View Details
+                                </a>
+                                <button class="btn btn-primary add-to-cart-btn" data-product-id="@product.Id">
+                                    <i class="bi bi-cart-plus"></i> Add to Cart
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</section>
+
+<!-- Trust Section -->
+<section class="trust-section py-5">
+    <div class="container">
+        <div class="row text-center g-4">
+            <div class="col-md-3">
+                <i class="bi bi-truck display-4 text-primary mb-3"></i>
+                <h5>Free Shipping</h5>
+                <p class="text-muted">On orders over $50</p>
+            </div>
+            <div class="col-md-3">
+                <i class="bi bi-shield-check display-4 text-primary mb-3"></i>
+                <h5>Secure Payment</h5>
+                <p class="text-muted">100% secure transactions</p>
+            </div>
+            <div class="col-md-3">
+                <i class="bi bi-arrow-repeat display-4 text-primary mb-3"></i>
+                <h5>Easy Returns</h5>
+                <p class="text-muted">30-day return policy</p>
+            </div>
+            <div class="col-md-3">
+                <i class="bi bi-headset display-4 text-primary mb-3"></i>
+                <h5>24/7 Support</h5>
+                <p class="text-muted">Dedicated customer service</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        // Initialize countdown timer for flash sale
+        const saleEndDate = new Date();
+        saleEndDate.setHours(saleEndDate.getHours() + 24);
+        initCountdownBar(saleEndDate);
+    </script>
+}
