@@ -1,0 +1,241 @@
+@model ProductDetailViewModel
+
+@{
+    ViewData["Title"] = Model.Product.Name;
+}
+
+<div class="container py-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+            <li class="breadcrumb-item"><a asp-controller="Products" asp-action="Index">Products</a></li>
+            <li class="breadcrumb-item active">@Model.Product.Name</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- Product Images -->
+        <div class="col-lg-6">
+            <div class="product-images">
+                <div class="main-image mb-3">
+                    <img src="@Model.Product.ImageUrl" class="img-fluid rounded" alt="@Model.Product.Name" id="mainProductImage">
+                </div>
+                @if (Model.Product.Images.Any())
+                {
+                    <div class="thumbnail-images d-flex gap-2">
+                        @foreach (var image in Model.Product.Images)
+                        {
+                            <img src="@image" class="img-thumbnail thumbnail-img" alt="@Model.Product.Name" style="width: 80px; height: 80px; cursor: pointer;">
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Product Details -->
+        <div class="col-lg-6">
+            <h1 class="mb-3">@Model.Product.Name</h1>
+            
+            <!-- Rating -->
+            <div class="d-flex align-items-center mb-3">
+                <div class="rating me-3">
+                    @for (int i = 0; i < 5; i++)
+                    {
+                        if (i < Math.Floor(Model.Product.Rating))
+                        {
+                            <i class="bi bi-star-fill text-warning"></i>
+                        }
+                        else
+                        {
+                            <i class="bi bi-star text-warning"></i>
+                        }
+                    }
+                    <span class="ms-2">@Model.Product.Rating (@Model.Product.ReviewCount reviews)</span>
+                </div>
+                <span class="text-muted">|</span>
+                <span class="ms-3 text-muted">@Model.Product.PurchaseCount sold</span>
+            </div>
+
+            <!-- Price -->
+            <div class="price-section mb-4">
+                <h2 class="text-primary mb-0">$@Model.Product.Price</h2>
+                @if (Model.Product.IsOnSale)
+                {
+                    <div class="mt-2">
+                        <span class="text-muted text-decoration-line-through fs-5">$@Model.Product.OriginalPrice</span>
+                        <span class="badge bg-danger ms-2 fs-6">Save @(Math.Round((Model.Product.OriginalPrice - Model.Product.Price) / Model.Product.OriginalPrice * 100))%</span>
+                    </div>
+                }
+            </div>
+
+            <!-- Countdown Timer -->
+            @if (Model.ShowCountdown && Model.CountdownEndDate.HasValue)
+            {
+                <div class="alert alert-warning mb-4" id="productCountdown" data-end-date="@Model.CountdownEndDate.Value.ToString("o")">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-clock-history fs-4 me-3"></i>
+                        <div>
+                            <strong>⚡ Limited Time Offer!</strong>
+                            <div class="countdown-timer-inline mt-2">
+                                <span class="time-badge"><span class="hours">00</span>h</span>
+                                <span class="time-badge"><span class="minutes">00</span>m</span>
+                                <span class="time-badge"><span class="seconds">00</span>s</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Stock Counter -->
+            <div class="stock-section mb-4">
+                @if (Model.Product.StockQuantity <= Model.StockUrgencyThreshold)
+                {
+                    <div class="alert alert-danger urgency-pulse">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Hurry! Only @Model.Product.StockQuantity items left in stock!</strong>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-success">
+                        <i class="bi bi-check-circle"></i> In Stock
+                    </div>
+                }
+            </div>
+
+            <!-- Description -->
+            <div class="mb-4">
+                <h5>Description</h5>
+                <p class="text-muted">@Model.Product.Description</p>
+            </div>
+
+            <!-- Features -->
+            @if (Model.Product.Features.Any())
+            {
+                <div class="mb-4">
+                    <h5>Key Features</h5>
+                    <ul class="list-unstyled">
+                        @foreach (var feature in Model.Product.Features)
+                        {
+                            <li class="mb-2"><i class="bi bi-check-circle-fill text-success me-2"></i>@feature</li>
+                        }
+                    </ul>
+                </div>
+            }
+
+            <!-- Add to Cart -->
+            <div class="mb-4">
+                <div class="input-group mb-3" style="max-width: 200px;">
+                    <button class="btn btn-outline-secondary" type="button" id="decreaseQty">-</button>
+                    <input type="number" class="form-control text-center" value="1" min="1" max="@Model.Product.StockQuantity" id="quantity">
+                    <button class="btn btn-outline-secondary" type="button" id="increaseQty">+</button>
+                </div>
+                <button class="btn btn-primary btn-lg w-100 mb-3 add-to-cart-btn" data-product-id="@Model.Product.Id">
+                    <i class="bi bi-cart-plus"></i> Add to Cart
+                </button>
+            </div>
+
+            <!-- Trust Badges -->
+            <div class="trust-badges">
+                <h6 class="mb-3">Why Buy From Us?</h6>
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="trust-badge-item">
+                            <i class="bi bi-shield-check text-success fs-4"></i>
+                            <small class="d-block">Secure Payment</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="trust-badge-item">
+                            <i class="bi bi-truck text-primary fs-4"></i>
+                            <small class="d-block">Free Shipping</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="trust-badge-item">
+                            <i class="bi bi-arrow-repeat text-info fs-4"></i>
+                            <small class="d-block">Easy Returns</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="trust-badge-item">
+                            <i class="bi bi-award text-warning fs-4"></i>
+                            <small class="d-block">Quality Guaranteed</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Products -->
+    @if (Model.RelatedProducts.Any())
+    {
+        <div class="related-products mt-5">
+            <h3 class="mb-4">You May Also Like</h3>
+            <div class="row g-4">
+                @foreach (var product in Model.RelatedProducts)
+                {
+                    <div class="col-md-3">
+                        <div class="card product-card h-100 hover-lift">
+                            @if (product.IsOnSale)
+                            {
+                                <div class="badge-sale">SALE</div>
+                            }
+                            <img src="@product.ImageUrl" class="card-img-top" alt="@product.Name">
+                            <div class="card-body">
+                                <h6 class="card-title">@product.Name</h6>
+                                <div class="price-section">
+                                    <span class="price-current fw-bold text-primary">$@product.Price</span>
+                                    @if (product.IsOnSale)
+                                    {
+                                        <span class="price-original text-muted text-decoration-line-through small ms-1">$@product.OriginalPrice</span>
+                                    }
+                                </div>
+                                <a asp-controller="Products" asp-action="Details" asp-route-id="@product.Id" class="btn btn-outline-primary btn-sm w-100 mt-2">
+                                    View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        // Thumbnail image switching
+        document.querySelectorAll('.thumbnail-img').forEach(img => {
+            img.addEventListener('click', function() {
+                document.getElementById('mainProductImage').src = this.src;
+            });
+        });
+
+        // Quantity controls
+        document.getElementById('increaseQty').addEventListener('click', function() {
+            const qtyInput = document.getElementById('quantity');
+            const max = parseInt(qtyInput.max);
+            const current = parseInt(qtyInput.value);
+            if (current < max) {
+                qtyInput.value = current + 1;
+            }
+        });
+
+        document.getElementById('decreaseQty').addEventListener('click', function() {
+            const qtyInput = document.getElementById('quantity');
+            const current = parseInt(qtyInput.value);
+            if (current > 1) {
+                qtyInput.value = current - 1;
+            }
+        });
+
+        // Product countdown timer
+        const countdownElement = document.getElementById('productCountdown');
+        if (countdownElement) {
+            const endDate = new Date(countdownElement.dataset.endDate);
+            initProductCountdown(endDate, countdownElement);
+        }
+    </script>
+}
